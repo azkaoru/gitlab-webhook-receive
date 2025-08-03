@@ -2,13 +2,53 @@
 """
 GitLab Webhook Receiver
 Receives GitLab webhooks and outputs issue number and description to stdout
+Also sends issue data to configured webhook URL
 """
 
 from flask import Flask, request, jsonify
 import json
 import sys
+import os
+import requests
 
 app = Flask(__name__)
+
+
+def send_webhook_data(issue_number, description, title, action):
+    """Send issue data to configured webhook URL"""
+    webhook_url = os.environ.get('WEBHOOK_URL')
+    
+    if not webhook_url:
+        print("Warning: WEBHOOK_URL environment variable not set, skipping webhook send", file=sys.stderr)
+        return False
+    
+    # Prepare webhook payload
+    webhook_payload = {
+        'issue_number': issue_number,
+        'description': description,
+        'title': title,
+        'action': action
+    }
+    
+    try:
+        # Send POST request to webhook URL
+        response = requests.post(
+            webhook_url,
+            json=webhook_payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            print(f"Successfully sent webhook data to {webhook_url}", file=sys.stderr)
+            return True
+        else:
+            print(f"Webhook send failed with status {response.status_code}: {response.text}", file=sys.stderr)
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending webhook: {str(e)}", file=sys.stderr)
+        return False
 
 
 @app.route('/webhook', methods=['POST'])
@@ -42,6 +82,9 @@ def gitlab_webhook():
                 print(f"Action: {action}")
                 print("-" * 50)
                 
+                # Send webhook data to configured URL
+                send_webhook_data(issue_number, description, title, action)
+                
                 return jsonify({'status': 'success', 'message': 'Issue processed'}), 200
             else:
                 print("Error: No issue data found in payload", file=sys.stderr)
@@ -66,4 +109,11 @@ if __name__ == '__main__':
     # Run the Flask app
     print("Starting GitLab webhook receiver...", file=sys.stderr)
     print("Listening for webhooks at /webhook", file=sys.stderr)
+    
+    webhook_url = os.environ.get('WEBHOOK_URL')
+    if webhook_url:
+        print(f"Will forward issue data to: {webhook_url}", file=sys.stderr)
+    else:
+        print("Warning: WEBHOOK_URL not set - webhook forwarding disabled", file=sys.stderr)
+        
     app.run(host='0.0.0.0', port=5000, debug=False)
