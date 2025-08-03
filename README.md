@@ -6,7 +6,7 @@ GitLabのwebhookを受信してissue番号とdescriptionを標準出力に出力
 
 - GitLabのissue関連webhookを受信
 - issue番号（iid）とdescriptionを標準出力に出力
-- issue番号とdescriptionを設定されたwebhook URLに転送
+- issue情報でGitLabパイプラインをトリガー
 - issue以外のwebhookも受信可能（ログのみ）
 
 ## 使用方法
@@ -19,10 +19,12 @@ pip install -r requirements.txt
 
 ### 2. 環境変数の設定
 
-webhook転送機能を使用する場合は、転送先のwebhook URLを環境変数で設定してください：
+GitLabパイプラインのトリガー機能を使用する場合は、以下の環境変数を設定してください：
 
 ```bash
-export WEBHOOK_URL="https://your-destination-webhook-url/webhook"
+export PROJECT_ID="123456"                    # GitLabプロジェクトID
+export TOKEN="your_trigger_token_here"        # パイプライントリガートークン
+export REF="main"                             # トリガーするブランチ/タグ
 ```
 
 ### 3. サーバーの起動
@@ -55,16 +57,18 @@ Action: open
 --------------------------------------------------
 ```
 
-2. WEBHOOK_URLが設定されている場合、以下のJSON形式で転送先webhookに送信されます：
+2. 環境変数が設定されている場合、以下の形式でGitLabパイプラインがトリガーされます：
 
-```json
-{
-  "issue_number": 42,
-  "description": "これはテスト用のイシューの説明です。",
-  "title": "テストイシュー",
-  "action": "open"
-}
+**トリガーURL：**
 ```
+POST https://gitlab.example.com/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&ref={REF}
+```
+
+**パイプライン変数：**
+- `ISSUE_NUMBER`: issue番号
+- `ISSUE_DESCRIPTION`: issueの説明
+- `ISSUE_TITLE`: issueのタイトル  
+- `ISSUE_ACTION`: issueのアクション（open, close等）
 
 ## エンドポイント
 
@@ -73,4 +77,6 @@ Action: open
 
 ## 環境変数
 
-- `WEBHOOK_URL` - issue情報を転送するwebhookのURL（オプション）
+- `PROJECT_ID` - GitLabプロジェクトID（パイプライントリガー用）
+- `TOKEN` - GitLabパイプライントリガートークン
+- `REF` - トリガーするブランチまたはタグ名

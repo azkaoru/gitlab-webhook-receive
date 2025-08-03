@@ -2,7 +2,7 @@
 """
 GitLab Webhook Receiver
 Receives GitLab webhooks and outputs issue number and description to stdout
-Also sends issue data to configured webhook URL
+Also triggers GitLab CI pipelines with issue data
 """
 
 from flask import Flask, request, jsonify
@@ -15,39 +15,49 @@ app = Flask(__name__)
 
 
 def send_webhook_data(issue_number, description, title, action):
-    """Send issue data to configured webhook URL"""
-    webhook_url = os.environ.get('WEBHOOK_URL')
+    """Trigger GitLab pipeline with issue data"""
+    project_id = os.environ.get('PROJECT_ID')
+    token = os.environ.get('TOKEN') 
+    ref = os.environ.get('REF')
     
-    if not webhook_url:
-        print("Warning: WEBHOOK_URL environment variable not set, skipping webhook send", file=sys.stderr)
+    if not all([project_id, token, ref]):
+        missing_vars = []
+        if not project_id: missing_vars.append('PROJECT_ID')
+        if not token: missing_vars.append('TOKEN')
+        if not ref: missing_vars.append('REF')
+        print(f"Warning: Required environment variables not set: {', '.join(missing_vars)}, skipping pipeline trigger", file=sys.stderr)
         return False
     
-    # Prepare webhook payload
-    webhook_payload = {
-        'issue_number': issue_number,
-        'description': description,
-        'title': title,
-        'action': action
+    # Construct GitLab pipeline trigger URL
+    trigger_url = f"https://gitlab.example.com/api/v4/projects/{project_id}/trigger/pipeline"
+    
+    # Prepare form data with issue information as pipeline variables
+    form_data = {
+        'token': token,
+        'ref': ref,
+        'variables[ISSUE_NUMBER]': str(issue_number),
+        'variables[ISSUE_DESCRIPTION]': description,
+        'variables[ISSUE_TITLE]': title,
+        'variables[ISSUE_ACTION]': action
     }
     
     try:
-        # Send POST request to webhook URL
+        # Send POST request to GitLab pipeline trigger API
         response = requests.post(
-            webhook_url,
-            json=webhook_payload,
-            headers={'Content-Type': 'application/json'},
+            trigger_url,
+            data=form_data,
             timeout=10
         )
         
-        if response.status_code == 200:
-            print(f"Successfully sent webhook data to {webhook_url}", file=sys.stderr)
+        if response.status_code == 201:
+            print(f"Successfully triggered GitLab pipeline for project {project_id}", file=sys.stderr)
             return True
         else:
-            print(f"Webhook send failed with status {response.status_code}: {response.text}", file=sys.stderr)
+            print(f"Pipeline trigger failed with status {response.status_code}: {response.text}", file=sys.stderr)
             return False
             
     except requests.exceptions.RequestException as e:
-        print(f"Error sending webhook: {str(e)}", file=sys.stderr)
+        print(f"Error triggering pipeline: {str(e)}", file=sys.stderr)
         return False
 
 
@@ -82,7 +92,7 @@ def gitlab_webhook():
                 print(f"Action: {action}")
                 print("-" * 50)
                 
-                # Send webhook data to configured URL
+                # Trigger GitLab pipeline with issue data
                 send_webhook_data(issue_number, description, title, action)
                 
                 return jsonify({'status': 'success', 'message': 'Issue processed'}), 200
@@ -110,10 +120,13 @@ if __name__ == '__main__':
     print("Starting GitLab webhook receiver...", file=sys.stderr)
     print("Listening for webhooks at /webhook", file=sys.stderr)
     
-    webhook_url = os.environ.get('WEBHOOK_URL')
-    if webhook_url:
-        print(f"Will forward issue data to: {webhook_url}", file=sys.stderr)
+    project_id = os.environ.get('PROJECT_ID')
+    token = os.environ.get('TOKEN')
+    ref = os.environ.get('REF')
+    
+    if all([project_id, token, ref]):
+        print(f"Will trigger GitLab pipelines for project {project_id} on ref {ref}", file=sys.stderr)
     else:
-        print("Warning: WEBHOOK_URL not set - webhook forwarding disabled", file=sys.stderr)
+        print("Warning: PROJECT_ID, TOKEN, or REF not set - pipeline triggering disabled", file=sys.stderr)
         
     app.run(host='0.0.0.0', port=5000, debug=False)
