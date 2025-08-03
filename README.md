@@ -22,9 +22,10 @@ pip install -r requirements.txt
 GitLabパイプラインのトリガー機能を使用する場合は、以下の環境変数を設定してください：
 
 ```bash
-export PROJECT_ID="123456"                    # GitLabプロジェクトID
-export TOKEN="your_trigger_token_here"        # パイプライントリガートークン
-export REF="main"                             # トリガーするブランチ/タグ
+export GITLAB_URL="https://gitlab.example.com"     # GitLabサーバーのURL
+export PROJECT_ID="123456"                         # GitLabプロジェクトID
+export TOKEN="your_trigger_token_here"             # パイプライントリガートークン
+export REF="main"                                  # トリガーするブランチ/タグ
 ```
 
 ### 3. サーバーの起動
@@ -61,7 +62,7 @@ Action: open
 
 **トリガーURL：**
 ```
-POST https://gitlab.example.com/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&ref={REF}
+POST {GITLAB_URL}/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&ref={REF}
 ```
 
 **パイプライン変数：**
@@ -77,6 +78,7 @@ POST https://gitlab.example.com/api/v4/projects/{PROJECT_ID}/trigger/pipeline?to
 
 ## 環境変数
 
+- `GITLAB_URL` - GitLabサーバーのURL（例：https://gitlab.example.com）
 - `PROJECT_ID` - GitLabプロジェクトID（パイプライントリガー用）
 - `TOKEN` - GitLabパイプライントリガートークン
 - `REF` - トリガーするブランチまたはタグ名

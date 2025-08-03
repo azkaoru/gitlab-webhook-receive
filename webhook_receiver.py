@@ -19,17 +19,19 @@ def send_webhook_data(issue_number, description, title, action):
     project_id = os.environ.get('PROJECT_ID')
     token = os.environ.get('TOKEN') 
     ref = os.environ.get('REF')
+    gitlab_url = os.environ.get('GITLAB_URL')
     
-    if not all([project_id, token, ref]):
+    if not all([project_id, token, ref, gitlab_url]):
         missing_vars = []
         if not project_id: missing_vars.append('PROJECT_ID')
         if not token: missing_vars.append('TOKEN')
         if not ref: missing_vars.append('REF')
+        if not gitlab_url: missing_vars.append('GITLAB_URL')
         print(f"Warning: Required environment variables not set: {', '.join(missing_vars)}, skipping pipeline trigger", file=sys.stderr)
         return False
     
     # Construct GitLab pipeline trigger URL
-    trigger_url = f"https://gitlab.example.com/api/v4/projects/{project_id}/trigger/pipeline"
+    trigger_url = f"{gitlab_url}/api/v4/projects/{project_id}/trigger/pipeline"
     
     # Prepare form data with issue information as pipeline variables
     form_data = {
@@ -123,10 +125,11 @@ if __name__ == '__main__':
     project_id = os.environ.get('PROJECT_ID')
     token = os.environ.get('TOKEN')
     ref = os.environ.get('REF')
+    gitlab_url = os.environ.get('GITLAB_URL')
     
-    if all([project_id, token, ref]):
-        print(f"Will trigger GitLab pipelines for project {project_id} on ref {ref}", file=sys.stderr)
+    if all([project_id, token, ref, gitlab_url]):
+        print(f"Will trigger GitLab pipelines for project {project_id} on ref {ref} at {gitlab_url}", file=sys.stderr)
     else:
-        print("Warning: PROJECT_ID, TOKEN, or REF not set - pipeline triggering disabled", file=sys.stderr)
+        print("Warning: PROJECT_ID, TOKEN, REF, or GITLAB_URL not set - pipeline triggering disabled", file=sys.stderr)
         
     app.run(host='0.0.0.0', port=5000, debug=False)
