@@ -2,13 +2,65 @@
 """
 GitLab Webhook Receiver
 Receives GitLab webhooks and outputs issue number and description to stdout
+Also triggers GitLab CI pipelines with issue data
 """
 
 from flask import Flask, request, jsonify
 import json
 import sys
+import os
+import requests
 
 app = Flask(__name__)
+
+
+def send_webhook_data(issue_number, description, title, action):
+    """Trigger GitLab pipeline with issue data"""
+    project_id = os.environ.get('PROJECT_ID')
+    token = os.environ.get('TOKEN') 
+    ref = os.environ.get('REF')
+    gitlab_url = os.environ.get('GITLAB_URL')
+    
+    if not all([project_id, token, ref, gitlab_url]):
+        missing_vars = []
+        if not project_id: missing_vars.append('PROJECT_ID')
+        if not token: missing_vars.append('TOKEN')
+        if not ref: missing_vars.append('REF')
+        if not gitlab_url: missing_vars.append('GITLAB_URL')
+        print(f"Warning: Required environment variables not set: {', '.join(missing_vars)}, skipping pipeline trigger", file=sys.stderr)
+        return False
+    
+    # Construct GitLab pipeline trigger URL
+    trigger_url = f"{gitlab_url}/api/v4/projects/{project_id}/trigger/pipeline"
+    
+    # Prepare form data with issue information as pipeline variables
+    form_data = {
+        'token': token,
+        'ref': ref,
+        'variables[ISSUE_NUMBER]': str(issue_number),
+        'variables[ISSUE_DESCRIPTION]': description,
+        'variables[ISSUE_TITLE]': title,
+        'variables[ISSUE_ACTION]': action
+    }
+    
+    try:
+        # Send POST request to GitLab pipeline trigger API
+        response = requests.post(
+            trigger_url,
+            data=form_data,
+            timeout=10
+        )
+        
+        if response.status_code == 201:
+            print(f"Successfully triggered GitLab pipeline for project {project_id}", file=sys.stderr)
+            return True
+        else:
+            print(f"Pipeline trigger failed with status {response.status_code}: {response.text}", file=sys.stderr)
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error triggering pipeline: {str(e)}", file=sys.stderr)
+        return False
 
 
 @app.route('/webhook', methods=['POST'])
@@ -42,6 +94,9 @@ def gitlab_webhook():
                 print(f"Action: {action}")
                 print("-" * 50)
                 
+                # Trigger GitLab pipeline with issue data
+                send_webhook_data(issue_number, description, title, action)
+                
                 return jsonify({'status': 'success', 'message': 'Issue processed'}), 200
             else:
                 print("Error: No issue data found in payload", file=sys.stderr)
@@ -66,4 +121,15 @@ if __name__ == '__main__':
     # Run the Flask app
     print("Starting GitLab webhook receiver...", file=sys.stderr)
     print("Listening for webhooks at /webhook", file=sys.stderr)
+    
+    project_id = os.environ.get('PROJECT_ID')
+    token = os.environ.get('TOKEN')
+    ref = os.environ.get('REF')
+    gitlab_url = os.environ.get('GITLAB_URL')
+    
+    if all([project_id, token, ref, gitlab_url]):
+        print(f"Will trigger GitLab pipelines for project {project_id} on ref {ref} at {gitlab_url}", file=sys.stderr)
+    else:
+        print("Warning: PROJECT_ID, TOKEN, REF, or GITLAB_URL not set - pipeline triggering disabled", file=sys.stderr)
+        
     app.run(host='0.0.0.0', port=5000, debug=False)
