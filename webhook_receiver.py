@@ -49,7 +49,8 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         response = requests.post(
             trigger_url,
             data=form_data,
-            timeout=10
+            timeout=10,
+            verify=False
         )
         
         if response.status_code == 201:
