@@ -30,8 +30,17 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         print(f"Warning: Required environment variables not set: {', '.join(missing_vars)}, skipping pipeline trigger", file=sys.stderr)
         return False
     
+    # Validate PROJECT_ID format (should be numeric)
+    if not project_id.isdigit():
+        print(f"Error: PROJECT_ID must be numeric, got: {project_id}", file=sys.stderr)
+        return False
+    
+    # Remove trailing slash from gitlab_url if present
+    gitlab_url = gitlab_url.rstrip('/')
+    
     # Construct GitLab pipeline trigger URL
     trigger_url = f"{gitlab_url}/api/v4/projects/{project_id}/trigger/pipeline"
+    print(f"Debug: Triggering pipeline at URL: {trigger_url}", file=sys.stderr)
     
     # Prepare form data with issue information as pipeline variables
     form_data = {
@@ -56,6 +65,22 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         if response.status_code == 201:
             print(f"Successfully triggered GitLab pipeline for project {project_id}", file=sys.stderr)
             return True
+        elif response.status_code == 404:
+            print(f"Pipeline trigger failed with status 404: Project not found or access denied", file=sys.stderr)
+            print(f"  Check that PROJECT_ID ({project_id}) is correct and you have access to the project", file=sys.stderr)
+            print(f"  Verify GITLAB_URL ({gitlab_url}) is correct and reachable", file=sys.stderr)
+            print(f"  Response: {response.text}", file=sys.stderr)
+            return False
+        elif response.status_code == 401:
+            print(f"Pipeline trigger failed with status 401: Authentication failed", file=sys.stderr)
+            print(f"  Check that TOKEN is valid and has pipeline trigger permissions", file=sys.stderr)
+            print(f"  Response: {response.text}", file=sys.stderr)
+            return False
+        elif response.status_code == 403:
+            print(f"Pipeline trigger failed with status 403: Access forbidden", file=sys.stderr)
+            print(f"  Check that TOKEN has permission to trigger pipelines on project {project_id}", file=sys.stderr)
+            print(f"  Response: {response.text}", file=sys.stderr)
+            return False
         else:
             print(f"Pipeline trigger failed with status {response.status_code}: {response.text}", file=sys.stderr)
             return False
