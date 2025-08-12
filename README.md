@@ -5,7 +5,7 @@ GitLabのwebhookを受信してissue番号とdescriptionを標準出力に出力
 ## 機能
 
 - GitLabのissue関連webhookを受信
-- issue番号（iid）とdescriptionを標準出力に出力
+- issue番号（iid）、description、assignee_usernameを標準出力に出力
 - issue情報でGitLabパイプラインをトリガー
 - issue以外のwebhookも受信可能（ログのみ）
 
@@ -55,6 +55,7 @@ Issue Number: 42
 Description: これはテスト用のイシューの説明です。
 Title: テストイシュー
 Action: open
+Assignee Username: test_assignee
 --------------------------------------------------
 ```
 
@@ -70,6 +71,7 @@ POST {GITLAB_URL}/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&re
 - `ISSUE_DESCRIPTION`: issueの説明
 - `ISSUE_TITLE`: issueのタイトル  
 - `ISSUE_ACTION`: issueのアクション（open, close等）
+- `ASSIGNEE_USERNAME`: issueの担当者ユーザー名（未設定の場合は "No assignee"）
 
 ## エンドポイント
 
