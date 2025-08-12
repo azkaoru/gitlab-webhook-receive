@@ -14,7 +14,7 @@ import requests
 app = Flask(__name__)
 
 
-def send_webhook_data(issue_number, description, title, action):
+def send_webhook_data(issue_number, description, title, action, assignee_username):
     """Trigger GitLab pipeline with issue data"""
     project_id = os.environ.get('PROJECT_ID')
     token = os.environ.get('TOKEN') 
@@ -40,7 +40,8 @@ def send_webhook_data(issue_number, description, title, action):
         'variables[ISSUE_NUMBER]': str(issue_number),
         'variables[ISSUE_DESCRIPTION]': description,
         'variables[ISSUE_TITLE]': title,
-        'variables[ISSUE_ACTION]': action
+        'variables[ISSUE_ACTION]': action,
+        'variables[ASSIGNEE_USERNAME]': assignee_username
     }
     
     try:
@@ -87,15 +88,30 @@ def gitlab_webhook():
                 title = issue_data.get('title', 'No title')
                 action = issue_data.get('action', 'unknown')
                 
+                # Extract assignee information
+                assignee_username = 'No assignee'
+                
+                # Check for assignees array (newer GitLab versions)
+                assignees = payload.get('assignees', [])
+                if assignees and len(assignees) > 0:
+                    # Use the first assignee if multiple assignees exist
+                    assignee_username = assignees[0].get('username', 'No assignee')
+                else:
+                    # Check for single assignee field (older GitLab versions)
+                    assignee = payload.get('assignee')
+                    if assignee:
+                        assignee_username = assignee.get('username', 'No assignee')
+                
                 # Output to stdout as requested
                 print(f"Issue Number: {issue_number}")
                 print(f"Description: {description}")
                 print(f"Title: {title}")
                 print(f"Action: {action}")
+                print(f"Assignee Username: {assignee_username}")
                 print("-" * 50)
                 
                 # Trigger GitLab pipeline with issue data
-                send_webhook_data(issue_number, description, title, action)
+                send_webhook_data(issue_number, description, title, action, assignee_username)
                 
                 return jsonify({'status': 'success', 'message': 'Issue processed'}), 200
             else:
