@@ -52,6 +52,16 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         'variables[ISSUE_ACTION]': action,
         'variables[ASSIGNEE_USERNAME]': assignee_username
     }
+
+    print(f"Debugging: description: {description}", file=sys.stderr)
+    if description == None :
+        print(f"Error: No issue description", file=sys.stderr)
+        return False
+
+    if assignee_username != "ai_deepseek" and  assignee_username != "ai_qwen":
+        print(f"Error: ASSIGNEE_USERNAME is ai_deepseek or ai_qwen, got: {assignee_username}", file=sys.stderr)
+        return False
+
     
     try:
         # Send POST request to GitLab pipeline trigger API

@@ -22,15 +22,22 @@ pip install -r requirements.txt
 GitLabパイプラインのトリガー機能を使用する場合は、以下の環境変数を設定してください：
 
 ```bash
-export GITLAB_URL="https://gitlab.example.com"     # GitLabサーバーのURL
-export PROJECT_ID="123456"                         # GitLabプロジェクトID
-export TOKEN="your_trigger_token_here"             # パイプライントリガートークン
-export REF="main"                                  # トリガーするブランチ/タグ
+# GitLabサーバーのURL
+export GITLAB_URL=https://gitlab.example.com
+# GitLabプロジェクトID
+export PROJECT_ID=123456
+# パイプライントリガートークン
+export TOKEN="your_trigger_token_here"
+# トリガーするブランチ/タグ
+export REF=main"
 ```
+
+TOKENはgitlabのProject -> Setting -> CI/CD -> Pipeline trigger  tokensより、トークンを発行すること
 
 ### 3. サーバーの起動
 
 ```bash
+source vars
 python3 webhook_receiver.py
 ```
 
