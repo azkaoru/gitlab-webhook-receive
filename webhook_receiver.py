@@ -145,8 +145,8 @@ def gitlab_webhook():
                 issue_tag_labels = []
                 for label in labels:
                     title = label.get('title', '')
-                    if title.startswith('issue_tag'):
-                        issue_tag_labels.append(title)
+                    if title.startswith('issue-tag-'):
+                        issue_tag_labels.append(title.split('issue-tag-')[1])
                 
                 # Get first 2 issue_tag labels
                 issue_tag1 = issue_tag_labels[0] if len(issue_tag_labels) > 0 else ''
