@@ -14,7 +14,7 @@ import requests
 app = Flask(__name__)
 
 
-def send_webhook_data(issue_number, description, title, action, assignee_username):
+def send_webhook_data(issue_number, description, title, action, assignee_username, issue_tag1='', issue_tag2=''):
     """Trigger GitLab pipeline with issue data"""
     project_id = os.environ.get('PROJECT_ID')
     token = os.environ.get('TOKEN') 
@@ -50,7 +50,9 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         'variables[ISSUE_DESCRIPTION]': description,
         'variables[ISSUE_TITLE]': title,
         'variables[ISSUE_ACTION]': action,
-        'variables[ASSIGNEE_USERNAME]': assignee_username
+        'variables[ASSIGNEE_USERNAME]': assignee_username,
+        'variables[ISSUE_TAG1]': issue_tag1,
+        'variables[ISSUE_TAG2]': issue_tag2
     }
 
     print(f"Debugging: description: {description}", file=sys.stderr)
@@ -138,16 +140,30 @@ def gitlab_webhook():
                     if assignee:
                         assignee_username = assignee.get('username', 'No assignee')
                 
+                # Extract labels and filter for issue_tag prefixed ones
+                labels = payload.get('labels', [])
+                issue_tag_labels = []
+                for label in labels:
+                    title = label.get('title', '')
+                    if title.startswith('issue_tag'):
+                        issue_tag_labels.append(title)
+                
+                # Get first 2 issue_tag labels
+                issue_tag1 = issue_tag_labels[0] if len(issue_tag_labels) > 0 else ''
+                issue_tag2 = issue_tag_labels[1] if len(issue_tag_labels) > 1 else ''
+                
                 # Output to stdout as requested
                 print(f"Issue Number: {issue_number}")
                 print(f"Description: {description}")
                 print(f"Title: {title}")
                 print(f"Action: {action}")
                 print(f"Assignee Username: {assignee_username}")
+                print(f"Issue Tag 1: {issue_tag1}")
+                print(f"Issue Tag 2: {issue_tag2}")
                 print("-" * 50)
                 
                 # Trigger GitLab pipeline with issue data
-                send_webhook_data(issue_number, description, title, action, assignee_username)
+                send_webhook_data(issue_number, description, title, action, assignee_username, issue_tag1, issue_tag2)
                 
                 return jsonify({'status': 'success', 'message': 'Issue processed'}), 200
             else:

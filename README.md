@@ -8,6 +8,7 @@ GitLabのwebhookを受信してissue番号とdescriptionを標準出力に出力
 - issue番号（iid）、description、assignee_usernameを標準出力に出力
 - issue情報でGitLabパイプラインをトリガー
 - issue以外のwebhookも受信可能（ログのみ）
+- issue_tagで前方一致するラベルを抽出してパイプライン変数として利用可能
 
 ## 使用方法
 
@@ -63,6 +64,8 @@ Description: これはテスト用のイシューの説明です。
 Title: テストイシュー
 Action: open
 Assignee Username: test_assignee
+Issue Tag 1: issue_tag_frontend
+Issue Tag 2: issue_tag_backend
 --------------------------------------------------
 ```
 
@@ -79,6 +82,8 @@ POST {GITLAB_URL}/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&re
 - `ISSUE_TITLE`: issueのタイトル  
 - `ISSUE_ACTION`: issueのアクション（open, close等）
 - `ASSIGNEE_USERNAME`: issueの担当者ユーザー名（未設定の場合は "No assignee"）
+- `ISSUE_TAG1`: issue_tagで前方一致するラベルの1つ目（見つからない場合は空文字）
+- `ISSUE_TAG2`: issue_tagで前方一致するラベルの2つ目（見つからない場合は空文字）
 
 ## エンドポイント
 
