@@ -42,7 +42,6 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
     trigger_url = f"{gitlab_url}/api/v4/projects/{project_id}/trigger/pipeline"
     print(f"Debug: Triggering pipeline at URL: {trigger_url}", file=sys.stderr)
    
-    desc= issue_tag2.split('-')[2:]
     # Prepare form data with issue information as pipeline variables
     form_data = {
         'token': token,
@@ -53,7 +52,7 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         'variables[ISSUE_ACTION]': action,
         'variables[ASSIGNEE_USERNAME]': assignee_username,
         'variables[ISSUE_TAG]': issue_tag1,
-        'variables[ISSUE_TAG_DESC]': desc
+        'variables[ISSUE_TAG_DESC]': issue_tag2 
     }
 
     print(f"Debugging: description: {description}", file=sys.stderr)
