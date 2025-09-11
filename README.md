@@ -42,14 +42,14 @@ source vars
 python3 webhook_receiver.py
 ```
 
-サーバーはデフォルトでポート5000で起動します。
+サーバーはデフォルトでポート50000で起動します。
 
 ### 4. GitLabでのwebhook設定
 
 GitLabプロジェクトの設定で以下のURLをwebhookとして設定してください：
 
 ```
-http://your-server:5000/webhook
+http://your-server:50000/webhook
 ```
 
 ## 出力例

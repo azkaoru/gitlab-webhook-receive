@@ -201,4 +201,4 @@ if __name__ == '__main__':
     else:
         print("Warning: PROJECT_ID, TOKEN, REF, or GITLAB_URL not set - pipeline triggering disabled", file=sys.stderr)
         
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=50000, debug=False)
