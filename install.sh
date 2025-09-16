@@ -5,8 +5,8 @@
 
 set -e
 
-INSTALL_DIR="/opt/gitlab-webhook-receive"
-CONFIG_DIR="/etc/gitlab-webhook-receive"
+INSTALL_DIR="/opt/webhook"
+CONFIG_DIR="/etc/webhook"
 SERVICE_FILE="gitlab-webhook-receive.service"
 USER="webhook"
 GROUP="webhook"
@@ -33,6 +33,8 @@ mkdir -p "$INSTALL_DIR"
 echo "Copying application files..."
 cp webhook_receiver.py "$INSTALL_DIR/"
 cp requirements.txt "$INSTALL_DIR/"
+cp config.example "$INSTALL_DIR/"
+cp gitlab-webhook-receive.service "$INSTALL_DIR/"
 if [ -f README.md ]; then
     cp README.md "$INSTALL_DIR/"
 fi
