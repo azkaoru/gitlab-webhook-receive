@@ -1,0 +1,27 @@
+[Unit]
+Description=GitLab Webhook Receiver
+Documentation=https://github.com/azkaoru/gitlab-webhook-receive
+After=network.target
+
+[Service]
+Type=simple
+User=webhook
+Group=webhook
+WorkingDirectory=/opt/gitlab-webhook-receive
+ExecStart=/usr/bin/python3 /opt/gitlab-webhook-receive/webhook_receiver.py
+EnvironmentFile=-/etc/gitlab-webhook-receive/config
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gitlab-webhook-receive
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/tmp
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

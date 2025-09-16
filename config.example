@@ -1,0 +1,19 @@
+# GitLab Webhook Receiver Configuration
+# This file contains environment variables for the webhook receiver service
+
+# GitLab server URL (required for pipeline triggering)
+# Example: GITLAB_URL=https://gitlab.example.com
+GITLAB_URL=
+
+# GitLab project ID for pipeline triggering (required for pipeline triggering)
+# Example: PROJECT_ID=123456
+PROJECT_ID=
+
+# GitLab pipeline trigger token (required for pipeline triggering)
+# Generate this token in GitLab: Project -> Settings -> CI/CD -> Pipeline triggers
+# Example: TOKEN=your_trigger_token_here
+TOKEN=
+
+# Branch or tag to trigger pipelines on (required for pipeline triggering)
+# Example: REF=main
+REF=

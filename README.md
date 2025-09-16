@@ -12,13 +12,75 @@ GitLabのwebhookを受信してissue番号とdescriptionを標準出力に出力
 
 ## 使用方法
 
-### 1. 依存関係のインストール
+### 方法1: systemdサービスとして実行（推奨）
+
+Rocky Linux 9での本格的な運用に適しています。
+
+#### インストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/azkaoru/gitlab-webhook-receive.git
+cd gitlab-webhook-receive
+
+# rootユーザーでインストールスクリプトを実行
+sudo ./install.sh
+```
+
+#### 設定
+
+```bash
+# 設定ファイルを編集
+sudo vi /etc/gitlab-webhook-receive/config
+```
+
+設定ファイルの例：
+```bash
+GITLAB_URL=https://gitlab.example.com
+PROJECT_ID=123456
+TOKEN=your_trigger_token_here
+REF=main
+```
+
+TOKENはgitlabのProject -> Setting -> CI/CD -> Pipeline trigger tokensより、トークンを発行すること
+
+#### サービス管理
+
+```bash
+# サービス開始
+sudo systemctl start gitlab-webhook-receive
+
+# サービス停止
+sudo systemctl stop gitlab-webhook-receive
+
+# サービス再起動
+sudo systemctl restart gitlab-webhook-receive
+
+# サービス状態確認
+sudo systemctl status gitlab-webhook-receive
+
+# 自動起動有効化
+sudo systemctl enable gitlab-webhook-receive
+
+# ログ確認
+sudo journalctl -u gitlab-webhook-receive -f
+```
+
+#### アンインストール
+
+```bash
+sudo ./uninstall.sh
+```
+
+### 方法2: 直接実行（開発・テスト用）
+
+#### 1. 依存関係のインストール
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 環境変数の設定
+#### 2. 環境変数の設定
 
 GitLabパイプラインのトリガー機能を使用する場合は、以下の環境変数を設定してください：
 
@@ -30,15 +92,12 @@ export PROJECT_ID=123456
 # パイプライントリガートークン
 export TOKEN="your_trigger_token_here"
 # トリガーするブランチ/タグ
-export REF=main"
+export REF=main
 ```
 
-TOKENはgitlabのProject -> Setting -> CI/CD -> Pipeline trigger  tokensより、トークンを発行すること
-
-### 3. サーバーの起動
+#### 3. サーバーの起動
 
 ```bash
-source vars
 python3 webhook_receiver.py
 ```
 
@@ -89,6 +148,27 @@ POST {GITLAB_URL}/api/v4/projects/{PROJECT_ID}/trigger/pipeline?token={TOKEN}&re
 
 - `POST /webhook` - GitLab webhookを受信
 - `GET /health` - ヘルスチェック
+
+## systemdでのログ管理
+
+systemdサービスとして実行した場合、ログはsystemdジャーナルに記録されます：
+
+```bash
+# リアルタイムでログを表示
+sudo journalctl -u gitlab-webhook-receive -f
+
+# 過去のログを表示
+sudo journalctl -u gitlab-webhook-receive
+
+# 特定の時間以降のログを表示
+sudo journalctl -u gitlab-webhook-receive --since "1 hour ago"
+
+# エラーレベルのログのみ表示
+sudo journalctl -u gitlab-webhook-receive -p err
+
+# ログの詳細情報も表示
+sudo journalctl -u gitlab-webhook-receive -o verbose
+```
 
 ## 環境変数
 
