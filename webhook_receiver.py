@@ -47,7 +47,7 @@ def send_webhook_data(issue_number, description, title, action, assignee_usernam
         'token': token,
         'ref': ref,
         'variables[ISSUE_NUMBER]': str(issue_number),
-        'variables[ISSUE_DESCRIPTION]': description,
+        #'variables[ISSUE_DESCRIPTION]': description,
         'variables[ISSUE_TITLE]': title,
         'variables[ISSUE_ACTION]': action,
         'variables[ASSIGNEE_USERNAME]': assignee_username,
